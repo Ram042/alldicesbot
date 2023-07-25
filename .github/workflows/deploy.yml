@@ -1,0 +1,29 @@
+name: Run Gradle on PRs
+on: push
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+      - name: Test
+        run: ./gradlew test
+      - name: Install app
+        run: ./gradlew installDist
+      - name: Install app
+        run: ./gradlew installDist
+      - name: Build container
+        run: docker build . -t app:latest
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push container
+        run: docker push app:latest ghcr.io/ram042/alldicesbot
