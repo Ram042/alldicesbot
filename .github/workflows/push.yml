@@ -21,7 +21,7 @@ jobs:
       - name: Install app
         run: ./gradlew installDist
       - name: Install QEMU
-        run: apt install qemu-user-static -y
+        run: sudo apt-get install qemu-user-static -y
       - name: Create manifest
         run: buildah manifest create app:latest
       - name: Build amd64
