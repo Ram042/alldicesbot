@@ -1,7 +1,7 @@
 name: Build and publish container
 on: push
 jobs:
-  deploy:
+  push:
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -35,4 +35,4 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: ghcr.io
       - name: Push container
-        run: buildah push --all app:latest docker://ghcr.io/ram042/alldicesbot:latest
+        run: buildah manifest push --all app:latest docker://ghcr.io/ram042/alldicesbot:latest
