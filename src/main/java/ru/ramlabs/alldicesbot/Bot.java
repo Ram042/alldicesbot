@@ -71,8 +71,8 @@ public class Bot {
                     Integer dice = entry.getKey();
                     Integer count = entry.getValue();
                     result += "D" + dice + "\n";
-                    int sum = 0;
-                    for (Integer i = 0; i < count; i++) {
+                    long sum = 0;
+                    for (int i = 0; i < count; i++) {
                         var roll = random.nextInt(1, dice + 1);
                         result += roll + "\n";
                         sum += roll;
