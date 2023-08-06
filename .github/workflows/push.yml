@@ -20,15 +20,19 @@ jobs:
         run: ./gradlew test
       - name: Install app
         run: ./gradlew installDist
-      - name: Install app
-        run: ./gradlew installDist
-      - name: Build container
-        run: podman build . -t app:latest
-      - name: Log in to Quay.io
+      - name: Install QEMU
+        run: apt install qemu-user-static -y
+      - name: Create manifest
+        run: buildah manifest create app:latest
+      - name: Build amd64
+        run: buildah build --manifest app:latest --arch amd64
+      - name: Build arm64
+        run: buildah build --manifest app:latest --arch arm64
+      - name: Log in to ghcr.io
         uses: redhat-actions/podman-login@v1
         with:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: ghcr.io
       - name: Push container
-        run: podman push app:latest ghcr.io/ram042/alldicesbot
+        run: buildah push --all app:latest docker://ghcr.io/ram042/alldicesbot:latest

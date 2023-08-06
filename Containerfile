@@ -1,4 +1,4 @@
-from docker.io/eclipse-temurin:17-alpine
+from docker.io/eclipse-temurin:17
 run mkdir /opt/app
 ENTRYPOINT ["java", "-classpath",  "/opt/app/*", "ru.ramlabs.alldicesbot.Main", \
 "-Dlogback.statusListenerClass=ch.qos.logback.core.status.NopStatusListener"]
