@@ -2,13 +2,16 @@
 <!DOCTYPE configuration>
 
 <configuration>
-    <import class="ch.qos.logback.classic.encoder.JsonEncoder"/>
     <import class="ru.ramlabs.alldicesbot.PatternJsonEncoder"/>
+    <import class="ch.qos.logback.classic.encoder.PatternLayoutEncoder"/>
     <import class="ch.qos.logback.core.ConsoleAppender"/>
 
     <appender name="STDOUT" class="ConsoleAppender">
-<!--        <encoder class="JsonEncoder"/>-->
         <encoder class="PatternJsonEncoder"/>
+<!--        <encoder class="PatternLayoutEncoder">-->
+<!--            <pattern>%d %-5level [%thread] %logger{0}: %msg%n</pattern>-->
+<!--            <outputPatternAsHeader>true</outputPatternAsHeader>-->
+<!--        </encoder>-->
     </appender>
 
     <root>

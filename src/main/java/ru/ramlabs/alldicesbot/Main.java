@@ -1,15 +1,17 @@
 package ru.ramlabs.alldicesbot;
 
-import com.google.gson.Gson;
-import com.pengrad.telegrambot.BotUtils;
+import com.github.ram042.json.Json;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.request.SetWebhook;
-import io.javalin.Javalin;
-import io.javalin.http.HttpStatus;
+import com.sun.net.httpserver.HttpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.PrintStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 public class Main {
@@ -20,31 +22,44 @@ public class Main {
         var tgBot = new TelegramBot(System.getenv("BOT_TOKEN"));
         var tgUrl = System.getenv("WEBHOOK_URL");
         var webhookToken = System.getenv("WEBHOOK_TOKEN");
-        var bot = new Bot(tgBot);
+        var bot = new Bot();
 
-        Javalin.create(javalinConfig -> {
-                    javalinConfig.showJavalinBanner = false;
-                })
-                .post("/webhook", ctx -> {
-                    var tokenHeader = ctx.header("X-Telegram-Bot-Api-Secret-Token");
-                    if (tokenHeader == null || !tokenHeader.equals(webhookToken)) {
-                        ctx.result("UNAUTHORIZED");
-                        ctx.status(HttpStatus.UNAUTHORIZED);
-                        logger.info("UNAUTHORIZED request");
-                        return;
-                    }
+        var socketAddress = new InetSocketAddress(InetAddress.getLoopbackAddress(),
+                Integer.parseInt(Optional.ofNullable(System.getenv("PORT")).orElse("8888")));
+        logger.info("Listening {}", socketAddress);
+        HttpServer server = HttpServer.create(socketAddress, 50);
 
-                    var update = BotUtils.parseUpdate(ctx.body());
+        server.createContext("/webhook", exchange -> {
+            var token = exchange.getRequestHeaders().get("X-Telegram-Bot-Api-Secret-Token");
+            if (token == null || token.size() != 1 || !token.get(0).equals(webhookToken)) {
+                var msg = "UNAUTHORIZED";
+                new PrintStream(exchange.getResponseBody()).print(msg);
+                exchange.sendResponseHeaders(401, msg.length());
+            }
 
-                    logger.info("Update {}", update);
+            var request = new String(exchange.getRequestBody().readAllBytes());
+            logger.info("Update {}", request);
 
-                    try {
-                        bot.handleUpdate(update);
-                    } catch (Exception e) {
-                        logger.error("Cannot handle update {}", update, e);
-                    }
-                })
-                .start(Integer.parseInt(Optional.ofNullable(System.getenv("PORT")).orElse("8888")));
+            try {
+                var sendMessage = bot.handleUpdate(Json.parse(request).getAsObject());
+                if (sendMessage != null) {
+                    var response = sendMessage.toString().getBytes(StandardCharsets.UTF_8);
+                    exchange.getResponseHeaders().add("content-type", "application/json");
+                    exchange.sendResponseHeaders(200, response.length);
+                    exchange.getResponseBody().write(response);
+                    exchange.close();
+                }
+
+            } catch (Exception e) {
+                logger.error("Cannot handle update", e);
+                exchange.sendResponseHeaders(200, 0);
+                exchange.close();
+            }
+
+        });
+
+        server.start();
+        Thread.yield();
 
         var setWebhookResult = tgBot.execute(new SetWebhook().url(tgUrl).secretToken(webhookToken));
 

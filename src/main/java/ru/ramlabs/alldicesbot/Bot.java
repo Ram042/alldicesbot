@@ -1,13 +1,11 @@
 package ru.ramlabs.alldicesbot;
 
-import com.pengrad.telegrambot.TelegramBot;
-import com.pengrad.telegrambot.model.Update;
-import com.pengrad.telegrambot.request.SendMessage;
+import com.github.ram042.json.Json;
+import com.github.ram042.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
@@ -18,21 +16,18 @@ public class Bot {
 
     private final Logger logger = LoggerFactory.getLogger(Bot.class);
 
-    private final TelegramBot bot;
-
     private static final Pattern presetCommandPattern = Pattern.compile("/d(\\d+)(@.+)?");
     private static final Pattern diceCommandPattern = Pattern.compile("(/dice(@\\w+)?\\s+)?\\s*((\\d*[dD])?\\d+\\s*)+");
 
-    public Bot(TelegramBot bot) {
-        this.bot = bot;
+    public Bot() {
     }
 
-    public void handleUpdate(Update update) {
-        if (update.message() == null || update.message().text() == null) {
-            return;
+    public JsonObject handleUpdate(JsonObject update) {
+        if (!update.containsObject("message") || !update.getObject("message").containsString("text")) {
+            return null;
         }
 
-        var message = update.message().text();
+        var message = update.getObject("message").getString("text").string;
 
         var matcher = presetCommandPattern.matcher(message);
         if (matcher.matches()) {
@@ -51,18 +46,19 @@ public class Bot {
             };
 
             if (result != null) {
-                var sendMessage = new SendMessage(update.message().chat().id(), result);
-                sendMessage.replyToMessageId(update.message().messageId());
-                var executed = bot.execute(sendMessage);
-                logger.info("Result: {}", executed);
-                return;
+                return Json.object(
+                        "method", "sendMessage",
+                        "chat_id", update.getObject("message").getObject("chat").getNumber("id").longValue(),
+                        "text", result,
+                        "reply_to_message_id", update.getObject("message").getNumber("message_id").longValue()
+                );
             }
         }
 
         var diceCommandMatcher = diceCommandPattern.matcher(message);
 
         if (diceCommandMatcher.matches()) {
-            TreeMap<Integer, Integer> parseDices = CommandParser.parseDices(update.message().text());
+            TreeMap<Integer, Integer> parseDices = CommandParser.parseDices(message);
 
             String result = "";
 
@@ -83,12 +79,15 @@ public class Bot {
                     result += "\n";
                 }
 
-                var sendMessage = new SendMessage(update.message().chat().id(), result);
-                sendMessage.replyToMessageId(update.message().messageId());
-                var executed = bot.execute(sendMessage);
-                logger.info("Result: {}", executed);
+                return Json.object(
+                        "method", "sendMessage",
+                        "chat_id", update.getObject("message").getObject("chat").getNumber("id").longValue(),
+                        "text", result,
+                        "reply_to_message_id", update.getObject("message").getNumber("message_id").longValue()
+                );
             }
         }
+        return null;
     }
 
 }
