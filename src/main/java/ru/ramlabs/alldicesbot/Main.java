@@ -52,13 +52,11 @@ public class Main {
                     exchange.getResponseBody().write(response);
                     exchange.close();
                 }
-
             } catch (Exception e) {
                 logger.error("Cannot handle update", e);
-                exchange.sendResponseHeaders(200, 0);
-                exchange.close();
             }
-
+            exchange.sendResponseHeaders(200, 0);
+            exchange.close();
         });
 
         server.start();
@@ -72,8 +70,6 @@ public class Main {
                 ).toString()))
                 .header("content-type","application/json")
                 .build();
-
-        logger.info("WH {}", request);
 
         var response = HttpClient.newHttpClient()
                 .send(request, HttpResponse.BodyHandlers.ofString());
