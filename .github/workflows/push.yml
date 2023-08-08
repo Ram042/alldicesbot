@@ -18,6 +18,9 @@ jobs:
         run: chmod +x gradlew
       - name: Test
         run: ./gradlew test
+        env:
+          USERNAME: ram042
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Install app
         run: ./gradlew installDist
       - name: Install QEMU
