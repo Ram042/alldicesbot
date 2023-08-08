@@ -4,23 +4,35 @@ import com.github.ram042.json.Json;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.request.SetWebhook;
 import com.sun.net.httpserver.HttpServer;
+import fi.iki.elonen.NanoHTTPD;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
+import java.net.*;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousChannelGroup;
+import java.nio.channels.AsynchronousServerSocketChannel;
+import java.nio.channels.AsynchronousSocketChannel;
+import java.nio.channels.ServerSocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public class Main {
 
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
-    public static void main(String[] args) throws IOException {
-        var tgBot = new TelegramBot(System.getenv("BOT_TOKEN"));
-        var tgUrl = System.getenv("WEBHOOK_URL");
+    public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException {
+        var botToken = System.getenv("BOT_TOKEN");
+        var webhookUrl = System.getenv("WEBHOOK_URL");
         var webhookToken = System.getenv("WEBHOOK_TOKEN");
         var bot = new Bot();
 
@@ -61,13 +73,21 @@ public class Main {
         server.start();
         Thread.yield();
 
-        var setWebhookResult = tgBot.execute(new SetWebhook().url(tgUrl).secretToken(webhookToken));
+        var request = HttpRequest.newBuilder()
+                .uri(new URI("https://api.telegram.org/bot" + botToken + "/setWebhook"))
+                .POST(HttpRequest.BodyPublishers.ofString(Json.object(
+                        "url", webhookUrl,
+                        "secret_token", webhookToken
+                ).toString()))
+                .header("content-type","application/json")
+                .build();
 
-        if (!setWebhookResult.isOk()) {
-            logger.error("Cannot update webhook: {}", setWebhookResult);
-        } else {
-            logger.info("Updated webhook");
-        }
+        logger.info("WH {}", request);
+
+        var response = HttpClient.newHttpClient()
+                .send(request, HttpResponse.BodyHandlers.ofString());
+
+        logger.info("Updated webhook {}", response.body());
 
     }
 }
