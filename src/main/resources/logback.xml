@@ -7,11 +7,11 @@
     <import class="ch.qos.logback.core.ConsoleAppender"/>
 
     <appender name="STDOUT" class="ConsoleAppender">
-        <encoder class="PatternJsonEncoder"/>
-<!--        <encoder class="PatternLayoutEncoder">-->
-<!--            <pattern>%d %-5level [%thread] %logger{0}: %msg%n</pattern>-->
-<!--            <outputPatternAsHeader>true</outputPatternAsHeader>-->
-<!--        </encoder>-->
+<!--        <encoder class="PatternJsonEncoder"/>-->
+        <encoder class="PatternLayoutEncoder">
+            <pattern>%d %-5level [%thread] %logger{0}: %msg%n</pattern>
+            <outputPatternAsHeader>true</outputPatternAsHeader>
+        </encoder>
     </appender>
 
     <root>
