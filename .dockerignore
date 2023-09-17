@@ -1,0 +1,6 @@
+build/
+.idea/
+.git/
+.gradle
+Containerfile.amd64
+Containerfile.arm64

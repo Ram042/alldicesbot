@@ -1,0 +1,9 @@
+spring:
+  jackson:
+    visibility:
+      all: any
+    mapper:
+      accept-case-insensitive-enums: on
+  main:
+    banner-mode: off
+

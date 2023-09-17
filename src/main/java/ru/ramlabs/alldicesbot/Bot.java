@@ -1,20 +1,23 @@
 package ru.ramlabs.alldicesbot;
 
 import com.github.ram042.json.Json;
-import com.github.ram042.json.JsonObject;
+import com.pengrad.telegrambot.model.Update;
+import com.pengrad.telegrambot.request.SendMessage;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
+@Service
+@Slf4j
 public class Bot {
 
     private final SecureRandom random = new SecureRandom();
-
-    private final Logger logger = LoggerFactory.getLogger(Bot.class);
 
     private static final Pattern presetCommandPattern = Pattern.compile("/d(\\d+)(@.+)?");
     private static final Pattern diceCommandPattern = Pattern.compile("(/dice(@\\w+)?\\s+)?\\s*((\\d*[dD])?\\d+\\s*)+");
@@ -22,12 +25,12 @@ public class Bot {
     public Bot() {
     }
 
-    public JsonObject handleUpdate(JsonObject update) {
-        if (!update.containsObject("message") || !update.getObject("message").containsString("text")) {
+    public SendMessage handleUpdate(Update update) {
+        if (update.message() == null || update.message().text() == null) {
             return null;
         }
 
-        var message = update.getObject("message").getString("text").string;
+        var message = update.message().text();
 
         var matcher = presetCommandPattern.matcher(message);
         if (matcher.matches()) {
@@ -46,12 +49,8 @@ public class Bot {
             };
 
             if (result != null) {
-                return Json.object(
-                        "method", "sendMessage",
-                        "chat_id", update.getObject("message").getObject("chat").getNumber("id").longValue(),
-                        "text", result,
-                        "reply_to_message_id", update.getObject("message").getNumber("message_id").longValue()
-                );
+                return new SendMessage(update.message().chat().id(), result)
+                        .replyToMessageId(update.message().messageId());
             }
         }
 
@@ -79,12 +78,8 @@ public class Bot {
                     result += "\n";
                 }
 
-                return Json.object(
-                        "method", "sendMessage",
-                        "chat_id", update.getObject("message").getObject("chat").getNumber("id").longValue(),
-                        "text", result,
-                        "reply_to_message_id", update.getObject("message").getNumber("message_id").longValue()
-                );
+                return new SendMessage(update.message().chat().id(), result)
+                        .replyToMessageId(update.message().messageId());
             }
         }
         return null;
