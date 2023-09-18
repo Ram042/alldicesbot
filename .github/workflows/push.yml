@@ -28,9 +28,9 @@ jobs:
       - name: Create manifest
         run: buildah manifest create app:latest
       - name: Build amd64
-        run: buildah build --manifest app:latest --arch amd64 -f Containerfile.amd64
+        run: buildah build --manifest app:latest --arch amd64 -f Containerfile
       - name: Build arm64
-        run: buildah build --manifest app:latest --arch arm64 -f Containerfile.arm64
+        run: buildah build --manifest app:latest --arch arm64 -f Containerfile
       - name: Log in to ghcr.io
         uses: redhat-actions/podman-login@v1
         with:
