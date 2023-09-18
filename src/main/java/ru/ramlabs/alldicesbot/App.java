@@ -1,7 +1,7 @@
 package ru.ramlabs.alldicesbot;
 
 import com.fasterxml.jackson.annotation.JsonRawValue;
-import com.github.ram042.json.Json;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pengrad.telegrambot.model.Update;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -42,18 +42,28 @@ public class App {
     private final String webhookToken;
     private final String botToken;
     private final String webhookUrl;
+    private final ObjectMapper objectMapper;
 
     public App(
             Bot bot,
             @Value("${WEBHOOK_TOKEN}") String webhookToken,
             @Value("${BOT_TOKEN}") String botToken,
-            @Value("${WEBHOOK_URL}") String webhookUrl
+            @Value("${WEBHOOK_URL}") String webhookUrl,
+            ObjectMapper objectMapper
     ) {
         this.bot = bot;
         this.webhookToken = webhookToken;
         this.botToken = botToken;
         this.webhookUrl = webhookUrl;
+        this.objectMapper = objectMapper;
         initHook();
+    }
+
+    public record SetWebhookParams(
+            String url,
+            String secret_token
+    ) {
+
     }
 
     private void initHook() {
@@ -61,10 +71,9 @@ public class App {
             try {
                 var request = HttpRequest.newBuilder()
                         .uri(new URI("https://api.telegram.org/bot" + botToken + "/setWebhook"))
-                        .POST(HttpRequest.BodyPublishers.ofString(Json.object(
-                                "url", webhookUrl,
-                                "secret_token", webhookToken
-                        ).toString()))
+                        .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(
+                                new SetWebhookParams(webhookUrl, webhookToken
+                                ))))
                         .header("content-type", "application/json")
                         .build();
 
