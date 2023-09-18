@@ -19,7 +19,7 @@ jobs:
       - name: Test
         run: ./gradlew test
         env:
-          USERNAME: ${{ github.actor }}
+          USERNAME: ram042
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Install app
         run: ./gradlew installDist
