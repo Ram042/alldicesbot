@@ -1,16 +1,8 @@
 FROM ghcr.io/graalvm/native-image-community:17 as build
-RUN mkdir /opt/src
-RUN microdnf install findutils
+RUN mkdir /opt/app /opt/build
+COPY build/install/alldicesbot/lib/* /opt/app
+RUN native-image -cp "/opt/app/*" --static --no-fallback ru.ramlabs.alldicesbot.Main /opt/build/app
 
-COPY ./ /opt/src
-
-RUN chmod +x /opt/src/gradlew && \
-    /opt/src/gradlew --version
-
-RUN cd /opt/src && \
-    chmod +x gradlew && \
-    ./gradlew nativeCompile
-
-FROM docker.io/library/ubuntu
-COPY --from=build /opt/src/build/native/nativeCompile/alldicesbot /opt/app
+FROM docker.io/library/alpine
+COPY --from=build /opt/build/app /opt
 CMD /opt/app
