@@ -28,10 +28,7 @@ jobs:
       - name: Create manifest
         run: buildah manifest create app:latest
       - name: Build amd64
-        run: buildah build --manifest app:latest --env USERNAME --env TOKEN --arch amd64 -f Containerfile.amd64
-        env:
-          USERNAME: ram042
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: buildah build --manifest app:latest --arch amd64 -f Containerfile.amd64
       - name: Build arm64
         run: buildah build --manifest app:latest --arch arm64 -f Containerfile.arm64
       - name: Log in to ghcr.io
