@@ -38,4 +38,4 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: ghcr.io
       - name: Push container
-        run: buildah manifest push --all app:latest-native docker://ghcr.io/ram042/alldicesbot:latest-native
+        run: buildah manifest push --all app:latest-native docker://ghcr.io/ram042/everydicebot:latest-native
